@@ -13,17 +13,20 @@
 | `build_words.py` | 把 `words.txt` 转成 `words.js`, 词库更新后重跑一次 |
 | `selftest.js` | `node selftest.js` 跑一遍解析/判分/错题本的用例 |
 
-## 挂到 GitHub Pages
+## 上线情况
 
-`linde-q.github.io` 是用户站点的**根目录**, 直接放 `index.html` 会盖掉你现在的主页。
-所以建议放到一个子目录里, 比如 `beidanci/`:
+已经挂在站点根目录: <https://linde-q.github.io/>
 
-1. 把本文件夹里的文件放进站点仓库的一个子目录, 例如 `beidanci/`
-   (`git clone https://github.com/linde-q/linde-q.github.io.git` → 拷贝 → `git add beidanci && git commit -m "add 背单词小助手" && git push`)
-2. 仓库 Settings → Pages → Source 选 `Deploy from a branch`, 分支 `main`, 目录 `/ (root)` 保存
-3. 等 1 分钟, 打开 <https://linde-q.github.io/beidanci/>
+- 仓库 `Linde-q/linde-q.github.io` 根目录放的就是 `index.html` + `quiz.js` + `words.js`
+  (Pages: `main` 分支 `/ (root)`)
+- 原来的主页(学生端 / 教师端那个 Quiz App)保留成 `index-old.html`, 它的 `css/ js/ html/ image/` 都没动
+- `beidanci/` 现在只剩一个跳转到主页的小页面, 以免之前分享过的链接失效
 
-也可以单独建一个仓库(比如 `beidanci`), 地址就是 `https://linde-q.github.io/beidanci/`。
+### 更新流程
+
+1. 改这一层(或仓库里)的 `index.html` / `quiz.js` / `words.js`
+2. 词库有更新时先跑 `python build_words.py` 重新生成 `words.js`
+3. 把这三个文件复制到仓库根目录, commit + push, GitHub Pages 一两分钟自动生效
 
 ## 本地先看看
 
