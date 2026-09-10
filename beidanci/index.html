@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FFF2F7">
+<title>背单词小助手 🐰</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐰</text></svg>">
+<style>
+  :root{
+    --bg:#FFF2F7; --card:#FFFFFF; --pink:#FF8FAB; --pink-hover:#FB6F92; --pink-light:#FFE3EC;
+    --lav:#C3B1F0; --lav-light:#F1EAFF; --green:#8CE0AE; --green-text:#1F8A54;
+    --red:#FFB3C1; --red-text:#E05572; --text:#6B5560; --sub:#B58CA2;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);
+    font-family:"Microsoft YaHei UI","PingFang SC","Hiragino Sans GB","Helvetica Neue",system-ui,sans-serif;
+    -webkit-text-size-adjust:100%;}
+  .wrap{max-width:560px;margin:0 auto;padding:14px 14px calc(26px + env(safe-area-inset-bottom))}
+  [hidden]{display:none !important}
+
+  .hero{text-align:center;padding:6px 0 10px}
+  .hero h1{font-size:26px;margin:0;color:var(--pink)}
+  .sub{margin:4px 0 0;color:var(--sub);font-size:13px}
+  .info{margin:4px 0 0;color:var(--sub);font-size:12px}
+
+  .card{background:var(--card);border-radius:16px;padding:12px 14px;margin-bottom:12px;
+    box-shadow:0 2px 10px rgba(255,143,171,.10)}
+  .label{font-size:13px;font-weight:700;margin:9px 0 6px}
+  .seg{display:flex;gap:6px;flex-wrap:wrap}
+  .seg-btn{flex:1 1 0;min-width:86px;padding:10px 6px;border:0;border-radius:12px;background:var(--pink-light);
+    color:var(--text);font-size:13px;font-weight:700;font-family:inherit;cursor:pointer}
+  .seg-btn.on{background:var(--pink);color:#fff}
+  .chapters{max-height:190px;overflow:auto}
+  .chk{display:flex;align-items:center;gap:9px;padding:7px 4px;font-size:13px;border-radius:8px;cursor:pointer}
+  .chk.bold{font-weight:700}
+  .chk input{width:19px;height:19px;accent-color:var(--pink);flex:0 0 auto;margin:0}
+
+  .btn{display:block;width:100%;padding:15px;border:0;border-radius:16px;font-family:inherit;
+    font-size:16px;font-weight:700;cursor:pointer;margin-top:8px}
+  .btn.primary{background:var(--pink);color:#fff}
+  .btn.primary:hover{background:var(--pink-hover)}
+  .btn.ghost{background:var(--lav-light);color:#7A5CB8}
+  .btn.lavender{background:var(--lav);color:#fff}
+  .btn.small{width:auto;padding:9px 14px;font-size:13px;border-radius:12px;margin:0}
+  .btn[disabled]{opacity:.55;cursor:default}
+
+  .row{display:flex;align-items:center;gap:10px}
+  .row .grow{flex:1 1 auto}
+  .progress-text{font-size:14px;font-weight:700}
+  .score{margin-left:auto;color:var(--green-text);font-weight:700;font-size:14px}
+  .bar{height:10px;background:var(--pink-light);border-radius:6px;overflow:hidden;margin:10px 0 6px}
+  .bar i{display:block;height:100%;width:0;background:var(--pink);transition:width .25s}
+  .scope{font-size:12px;color:var(--sub)}
+  .chip{display:inline-block;background:var(--lav-light);color:#7A5CB8;font-weight:700;
+    font-size:12px;border-radius:10px;padding:6px 10px;margin:8px 0 2px}
+  .hint{color:var(--sub);font-size:13px;margin:8px 0 2px}
+  .prompt{font-size:24px;font-weight:700;color:#E04F78;text-align:center;
+    margin:8px 0 14px;line-height:1.35;word-break:break-word}
+  .answer{width:100%;padding:15px;border-radius:16px;border:2px solid var(--pink);background:#fff;
+    font-family:inherit;font-size:17px;text-align:center;color:var(--text);outline:none}
+  .answer:disabled{background:#FCFAFB}
+  .feedback{white-space:pre-line;text-align:center;font-weight:700;font-size:14px;
+    margin:12px 0 2px;line-height:1.55}
+  .feedback.good{color:var(--green-text)}
+  .feedback.bad{color:var(--red-text)}
+  .feedback.sub{color:var(--sub);font-weight:400}
+
+  .notice{border-radius:14px;padding:11px 13px;font-size:13px;margin-bottom:12px;line-height:1.5}
+  .notice.good{background:#E8FAF0;color:var(--green-text)}
+  .notice.warn{background:#FFF6E5;color:#9A6B12}
+  .notice.bad{background:#FFE9EE;color:var(--red-text)}
+
+  .big{font-size:56px;text-align:center;margin:12px 0 0}
+  .msg{text-align:center;font-size:18px;font-weight:700;color:var(--pink);margin:2px 0}
+  .score-line{text-align:center;font-weight:700;margin:6px 0 12px}
+  .title{font-size:22px;font-weight:700;color:var(--pink);text-align:center;margin:6px 0 10px}
+
+  .item{background:#fff;border-radius:14px;padding:10px 12px;margin:8px 0;
+    box-shadow:0 2px 8px rgba(255,143,171,.10)}
+  .item .en{font-weight:700;font-size:14px}
+  .item .meta{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--sub);margin-top:5px}
+  .item .stat{color:var(--red-text);font-weight:700;white-space:nowrap}
+  .tiny{font-size:12px;color:var(--sub);line-height:1.8}
+  .foot{margin-top:14px;text-align:center}
+  .link{background:none;border:0;color:#7A5CB8;font-size:12px;font-family:inherit;
+    text-decoration:underline;cursor:pointer;padding:2px 4px}
+  .empty{text-align:center;color:var(--sub);font-size:14px;padding:26px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="notice" class="notice" hidden></div>
+
+  <!-- ============ 主页 ============ -->
+  <section id="view-home" class="view">
+    <div class="hero">
+      <h1>🐰 背单词小助手</h1>
+      <p class="sub">🐻 今天也要努力背单词哦～</p>
+      <p class="info" id="info"></p>
+    </div>
+
+    <div class="card">
+      <div class="label">🎯 抽查方向</div>
+      <div class="seg" id="seg-direction"></div>
+      <div class="label">🔢 每轮题数</div>
+      <div class="seg" id="seg-count"></div>
+      <div class="label">🗂 抽查范围</div>
+      <div class="seg" id="seg-source"></div>
+      <div class="label">📑 章节选择</div>
+      <div class="chapters" id="chapters"></div>
+    </div>
+
+    <button class="btn primary" id="btn-start">🚀 开始抽背</button>
+    <button class="btn ghost" id="btn-wrongbook">📖 错题本</button>
+
+    <div class="foot">
+      <div class="tiny" id="word-source"></div>
+      <div class="tiny">选项和错题本都存在这台设备的浏览器里, 不会上传。</div>
+      <div class="tiny">
+        <button class="link" id="btn-import">📥 换一份词库文件</button>
+        <button class="link" id="btn-reset-words" hidden>♻️ 恢复内置词库</button>
+        <input type="file" id="file-words" accept=".txt,.csv,.tsv,text/plain" hidden>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 抽背 ============ -->
+  <section id="view-quiz" class="view" hidden>
+    <div class="row">
+      <button class="btn small ghost" id="btn-quit">← 返回</button>
+      <span class="progress-text" id="q-index"></span>
+      <span class="score" id="q-score"></span>
+    </div>
+    <div class="bar"><i id="q-bar"></i></div>
+    <div class="scope" id="q-scope"></div>
+    <div class="chip" id="q-chapter"></div>
+    <div class="hint" id="q-hint"></div>
+    <div class="prompt" id="q-prompt"></div>
+    <input class="answer" id="q-input" autocomplete="off" autocorrect="off"
+           autocapitalize="off" spellcheck="false" placeholder="✏️ 在这里输入答案…">
+    <button class="btn primary" id="btn-submit">✅ 提交答案</button>
+    <button class="btn ghost small" id="btn-giveup" style="display:block;margin:10px auto 0">😵 不会, 看答案</button>
+    <div class="feedback" id="q-feedback"></div>
+    <button class="btn lavender" id="btn-next" hidden>下一题 ▶</button>
+  </section>
+
+  <!-- ============ 成绩 ============ -->
+  <section id="view-result" class="view" hidden>
+    <div class="big" id="r-emoji"></div>
+    <div class="msg" id="r-msg"></div>
+    <div class="score-line" id="r-score"></div>
+    <div id="r-wrongs"></div>
+    <div class="row" style="gap:8px">
+      <button class="btn primary" id="btn-again">🔁 再来一轮</button>
+      <button class="btn lavender" id="btn-home">🏠 返回主页</button>
+    </div>
+  </section>
+
+  <!-- ============ 错题本 ============ -->
+  <section id="view-wrongbook" class="view" hidden>
+    <div class="title">📖 错题本</div>
+    <div class="tiny" style="text-align:center" id="wb-count"></div>
+    <div id="wb-list"></div>
+    <div class="row" style="gap:8px;margin-top:12px">
+      <button class="btn small ghost" id="btn-clear" style="flex:1 1 auto">🗑 清空错题本</button>
+      <button class="btn small lavender" id="btn-wb-home" style="flex:1 1 auto">🏠 返回主页</button>
+    </div>
+  </section>
+</div>
+
+<script src="words.js"></script>
+<script src="quiz.js"></script>
+<script>
+(function () {
+  'use strict';
+  var store, settings, wrongbook, words = [], wordByKey = new Map(), chapters = [], sourceName = '';
+  var session = null, noticeTimer = null;
+  var $ = function (id) { return document.getElementById(id); };
+
+  // 双击 index.html 打开时, 有的浏览器会禁用 localStorage, 那就退回内存存储(不保存而已)
+  function memoryStore() {
+    var m = {};
+    return {
+      getItem: function (k) { return Object.prototype.hasOwnProperty.call(m, k) ? m[k] : null; },
+      setItem: function (k, v) { m[k] = String(v); },
+      removeItem: function (k) { delete m[k]; },
+    };
+  }
+  try {
+    store = window.localStorage;
+    store.setItem('beidanci.probe', '1');
+    store.removeItem('beidanci.probe');
+  } catch (e) {
+    store = memoryStore();
+  }
+  settings = new QB.Settings(store);
+  wrongbook = new QB.WrongBook(store);
+
+  // ---------- 小工具 ----------
+  function notice(msg, kind) {
+    var box = $('notice');
+    box.textContent = msg;
+    box.className = 'notice ' + (kind || 'warn');
+    box.hidden = false;
+    clearTimeout(noticeTimer);
+    if (kind !== 'bad') { noticeTimer = setTimeout(function () { box.hidden = true; }, 5000); }
+  }
+
+  function show(view) {
+    ['home', 'quiz', 'result', 'wrongbook'].forEach(function (v) {
+      $('view-' + v).hidden = (v !== view);
+    });
+    if (view === 'home') { renderHome(); }
+    window.scrollTo(0, 0);
+  }
+
+  // ---------- 词库 ----------
+  function setWords(name, text) {
+    words = QB.parseWords(text);
+    wordByKey = new Map(words.map(function (w) { return [QB.wordKey(w), w]; }));
+    chapters = QB.chapterList(words);
+    sourceName = name;
+    if (settings.data.chapters) {                 // 换词库后, 不存在的章节要去掉
+      var alive = settings.data.chapters.filter(function (c) {
+        return chapters.some(function (x) { return x.chapter === c; });
+      });
+      if (alive.length !== settings.data.chapters.length) {
+        settings.set({ chapters: alive.length ? alive : null });
+      }
+    }
+    if (!words.length) {
+      notice('词库里一个单词都没解析出来, 格式要和原来一样: 章节标题行 + Tab 分隔的「英文 中文」。', 'bad');
+    } else if (words.length < 5) {
+      notice('词库只读到 ' + words.length + ' 个单词, 确认一下是不是拿错了文件。', 'warn');
+    }
+  }
+
+  // ---------- 主页选项 ----------
+  function buildSeg(id, pairs, current, onPick) {
+    var box = $(id);
+    box.innerHTML = '';
+    pairs.forEach(function (p) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'seg-btn' + (p[0] === current ? ' on' : '');
+      b.textContent = p[1];
+      b.onclick = function () {
+        onPick(p[0]);
+        Array.prototype.forEach.call(box.children, function (x) { x.className = 'seg-btn'; });
+        b.className = 'seg-btn on';
+      };
+      box.appendChild(b);
+    });
+  }
+
+  function buildChapters() {
+    var box = $('chapters');
+    box.innerHTML = '';
+    var all = settings.data.chapters === null;
+    box.appendChild(chapterRow(null, '✅ 全部章节(' + words.length + '词)', all, true));
+    chapters.forEach(function (ch) {
+      var on = all || settings.data.chapters.indexOf(ch.chapter) >= 0;
+      box.appendChild(chapterRow(ch.chapter,
+        '第' + ch.chapter + '章 ' + ch.name + ' · ' + ch.count + '词', on, false));
+    });
+  }
+
+  function chapterRow(value, text, checked, isAll) {
+    var lab = document.createElement('label');
+    lab.className = 'chk' + (isAll ? ' bold' : '');
+    var input = document.createElement('input');
+    input.type = 'checkbox';
+    input.checked = checked;
+    input.onchange = function () {
+      if (isAll) {
+        settings.set({ chapters: input.checked ? null : [] });
+      } else {
+        var cur = new Set(settings.data.chapters === null
+          ? chapters.map(function (c) { return c.chapter; })
+          : settings.data.chapters);
+        if (input.checked) { cur.add(value); } else { cur.delete(value); }
+        var complete = chapters.every(function (c) { return cur.has(c.chapter); });
+        settings.set({ chapters: complete ? null : Array.from(cur).sort(function (a, b) { return a - b; }) });
+      }
+      buildChapters();
+    };
+    var span = document.createElement('span');
+    span.textContent = text;
+    lab.appendChild(input);
+    lab.appendChild(span);
+    return lab;
+  }
+
+  function renderHome() {
+    $('info').textContent = '📚 词库 ' + words.length + ' 词(' + sourceName + ')   ·   📖 错题本 '
+      + wrongbook.size() + ' 词';
+    $('word-source').textContent = '📄 当前词库: ' + sourceName + ' · 共 ' + words.length + ' 词';
+  }
+
+  // ---------- 抽背 ----------
+  function buildPool() {
+    var sel = settings.data.chapters;
+    if (settings.data.source !== 'wrong') { return QB.pickPool(words, sel); }
+    var allowed = sel === null ? null : new Set(sel);
+    var out = [], seen = new Set();
+    wrongbook.list().forEach(function (e) {
+      var w = wordByKey.get(JSON.stringify(e.key));
+      if (!w) { return; }
+      var k = QB.wordKey(w);
+      if (seen.has(k)) { return; }
+      seen.add(k);
+      if (!allowed || allowed.has(w.chapter)) { out.push(w); }
+    });
+    return out;
+  }
+
+  function startQuiz() {
+    var pool = buildPool();
+    if (!pool.length) {
+      notice(settings.data.source === 'wrong'
+        ? '错题本还是空的哦～先去抽背攒点错题吧 🐰'
+        : '没有选中的单词哦～请至少选择一个章节 🐰', 'warn');
+      return;
+    }
+    session = {
+      questions: QB.makeQuestions(pool, settings.data.count, settings.data.direction),
+      idx: 0, correct: 0, wrong: [], answered: false,
+      scope: QB.SOURCE_LABELS[settings.data.source] + '（' + pool.length + ' 词）',
+    };
+    show('quiz');
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    var q = session.questions[session.idx];
+    var total = session.questions.length;
+    $('q-index').textContent = '第 ' + (session.idx + 1) + ' / ' + total + ' 题';
+    $('q-score').textContent = '✅ ' + session.correct;
+    $('q-bar').style.width = (session.idx / total * 100) + '%';
+    $('q-scope').textContent = '🎯 本轮范围: ' + session.scope;
+    $('q-chapter').textContent = '📍 ' + QB.chapterLabel(q.word);
+    $('q-hint').textContent = q.direction === 'en2zh' ? '👇 请输入对应的中文意思' : '👇 请输入对应的英文';
+    var prompt = $('q-prompt');
+    prompt.textContent = q.prompt;
+    prompt.style.fontSize = (q.prompt.length > 60 ? 18 : q.prompt.length > 40 ? 20 : 24) + 'px';
+    var input = $('q-input');
+    input.value = '';
+    input.disabled = false;
+    input.style.borderColor = 'var(--pink)';
+    $('btn-submit').disabled = false;
+    $('btn-giveup').disabled = false;
+    $('btn-next').hidden = true;
+    setFeedback('', '');
+    session.answered = false;
+    input.focus({ preventScroll: true });
+  }
+
+  function setFeedback(text, kind) {
+    var el = $('q-feedback');
+    el.textContent = text;
+    el.className = 'feedback' + (kind ? ' ' + kind : '');
+  }
+
+  function submit() {
+    if (!session || session.answered) { return; }
+    if (!$('q-input').value.trim()) {
+      setFeedback('✏️ 先输入答案再提交哦～', 'sub');
+      return;
+    }
+    settle(true);
+  }
+
+  function giveUp() {
+    if (!session || session.answered) { return; }
+    settle(false);
+  }
+
+  function settle(attempted) {
+    var q = session.questions[session.idx];
+    var input = $('q-input');
+    var typed = input.value.trim();
+    var res = attempted ? QB.checkAnswer(q.direction, typed, q.word) : { ok: false, answer: q.answer };
+    session.answered = true;
+    input.disabled = true;
+    $('btn-submit').disabled = true;
+    $('btn-giveup').disabled = true;
+
+    if (res.ok) {
+      input.style.borderColor = 'var(--green)';
+      session.correct += 1;
+      $('q-score').textContent = '✅ ' + session.correct;
+      var r = wrongbook.record(q.word, true);
+      var tail = '';
+      if (r.state === 'removed') {
+        tail = '\n连续答对 ' + QB.CONSECUTIVE_TO_REMOVE + ' 次, 已移出错题本 🐰✨';
+      } else if (r.streak) {
+        tail = '\n错题本连续答对 ' + r.streak + '/' + QB.CONSECUTIVE_TO_REMOVE + ' 🔥';
+      }
+      setFeedback('🎉 答对啦!真棒!⭐\n正确答案: ' + q.answer + tail, 'good');
+    } else {
+      input.style.borderColor = 'var(--red)';
+      var r2 = wrongbook.record(q.word, false);
+      session.wrong.push({ word: q.word, answer: q.answer });
+      setFeedback((attempted ? '😿 答错了…' : '😵 没关系, 先看答案:')
+        + (typed ? '\n你的答案: ' + typed : '')
+        + '\n正确答案: ' + q.answer + '\n'
+        + (r2.state === 'added' ? '已记入错题本 📖' : '错题本连续答对清零 💔'), 'bad');
+    }
+
+    // 看完答案后由用户点「下一题」再继续(不自动跳)
+    var btn = $('btn-next');
+    btn.hidden = false;
+    btn.textContent = (session.idx + 1 >= session.questions.length) ? '📊 看结果' : '下一题 ▶';
+    btn.focus({ preventScroll: true });
+  }
+
+  function next() {
+    if (!session) { return; }
+    session.idx += 1;
+    if (session.idx >= session.questions.length) { showResult(); } else { renderQuestion(); }
+  }
+
+  function showResult() {
+    var total = session.questions.length;
+    var score = session.correct / total;
+    var emoji, msg;
+    if (score >= 1) { emoji = '🏆'; msg = '满分!你太棒啦!🎉🐰'; }
+    else if (score >= 0.8) { emoji = '🌟'; msg = '很不错哦,继续保持!'; }
+    else if (score >= 0.6) { emoji = '💪'; msg = '及格啦,再练练就更棒了~'; }
+    else { emoji = '🍀'; msg = '别灰心,多复习几遍吧~'; }
+    $('r-emoji').textContent = emoji;
+    $('r-msg').textContent = msg;
+    $('r-score').textContent = '答对 ' + session.correct + ' / ' + total + ' 题';
+
+    var box = $('r-wrongs');
+    box.innerHTML = '';
+    if (session.wrong.length) {
+      var head = document.createElement('div');
+      head.className = 'label';
+      head.textContent = '❌ 错题回顾(' + session.wrong.length + '):';
+      box.appendChild(head);
+      session.wrong.forEach(function (it) {
+        var el = document.createElement('div');
+        el.className = 'item';
+        var en = document.createElement('div');
+        en.className = 'en';
+        en.textContent = it.word.en + '  →  ' + it.word.zh;
+        var meta = document.createElement('div');
+        meta.className = 'meta';
+        var pos = document.createElement('span');
+        pos.textContent = '📍 ' + QB.chapterLabel(it.word);
+        meta.appendChild(pos);
+        el.appendChild(en);
+        el.appendChild(meta);
+        box.appendChild(el);
+      });
+    } else {
+      var ok = document.createElement('div');
+      ok.className = 'empty';
+      ok.textContent = '本轮全对, 零错题!🎊';
+      box.appendChild(ok);
+    }
+    show('result');
+  }
+
+  // ---------- 错题本 ----------
+  function showWrongbook() {
+    var list = wrongbook.words(wordByKey);
+    $('wb-count').textContent = '共 ' + wrongbook.size() + ' 个错词 · 连续答对 '
+      + QB.CONSECUTIVE_TO_REMOVE + ' 次即可移出';
+    var box = $('wb-list');
+    box.innerHTML = '';
+    if (!list.length) {
+      var e = document.createElement('div');
+      e.className = 'empty';
+      e.textContent = '🕊️ 错题本空空如也, 太棒啦!继续保持哦~';
+      box.appendChild(e);
+    }
+    list.forEach(function (it) {
+      var el = document.createElement('div');
+      el.className = 'item';
+      var en = document.createElement('div');
+      en.className = 'en';
+      en.textContent = it.word.en + '  →  ' + it.word.zh;
+      var meta = document.createElement('div');
+      meta.className = 'meta';
+      var pos = document.createElement('span');
+      pos.textContent = '📍 ' + QB.chapterLabel(it.word);
+      var stat = document.createElement('span');
+      stat.className = 'stat';
+      stat.textContent = '答错 ' + it.wrong + ' 次 · 🔥 ' + it.streak + '/' + QB.CONSECUTIVE_TO_REMOVE;
+      meta.appendChild(pos);
+      meta.appendChild(stat);
+      el.appendChild(en);
+      el.appendChild(meta);
+      box.appendChild(el);
+    });
+    show('wrongbook');
+  }
+
+  // ---------- 绑定 ----------
+  $('btn-start').onclick = startQuiz;
+  $('btn-quit').onclick = function () { session = null; show('home'); };
+  $('btn-submit').onclick = submit;
+  $('btn-giveup').onclick = giveUp;
+  $('btn-next').onclick = next;
+  $('btn-wrongbook').onclick = showWrongbook;
+  $('btn-wb-home').onclick = function () { show('home'); };
+  $('btn-home').onclick = function () { show('home'); };
+  $('btn-again').onclick = startQuiz;
+  $('btn-clear').onclick = function () {
+    if (window.confirm('确定要清空错题本吗?🐰')) { wrongbook.clear(); showWrongbook(); }
+  };
+  $('q-input').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); submit(); }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' || !session || !session.answered || $('view-quiz').hidden) { return; }
+    if (e.target === $('btn-next')) { return; }   // 按钮自己会响应回车, 免得一下跳两题
+    e.preventDefault();
+    next();
+  });
+
+  // ---------- 导入 / 恢复词库 ----------
+  $('btn-import').onclick = function () { $('file-words').click(); };
+  $('file-words').onchange = function (e) {
+    var f = e.target.files && e.target.files[0];
+    if (!f) { return; }
+    f.arrayBuffer().then(function (buf) {
+      var text = QB.decodeBytes(buf);
+      if (!QB.parseWords(text).length) {
+        notice('这个文件里没解析出单词。格式要和词库一样: 章节标题行 + Tab 分隔的「英文 中文」。', 'bad');
+        return;
+      }
+      if (!QB.saveCustomWords(store, { name: f.name, text: text })) {
+        notice('词库太大, 浏览器存不下(这次仍然可以用)。', 'warn');
+      }
+      setWords(f.name, text);
+      $('btn-reset-words').hidden = false;
+      buildChapters();
+      renderHome();
+      notice('已换成「' + f.name + '」, 共 ' + words.length + ' 词 ✅', 'good');
+    });
+    e.target.value = '';
+  };
+  $('btn-reset-words').onclick = function () {
+    QB.clearCustomWords(store);
+    if (window.WORDS_SOURCE) { setWords(window.WORDS_SOURCE.name, window.WORDS_SOURCE.text); }
+    $('btn-reset-words').hidden = true;
+    buildChapters();
+    renderHome();
+    notice('已恢复内置词库 ✅', 'good');
+  };
+
+  // ---------- 启动 ----------
+  (function boot() {
+    var custom = QB.loadCustomWords(store);
+    var data = custom || window.WORDS_SOURCE;
+    if (!data || typeof data.text !== 'string') {
+      notice('没有读到词库, 请确认 words.js 和 index.html 放在一起。', 'bad');
+      $('btn-start').disabled = true;
+      return;
+    }
+    setWords(data.name || '词库', data.text);
+    $('btn-reset-words').hidden = !custom;
+    buildSeg('seg-direction', QB.DIRECTIONS.map(function (d) { return [d, QB.DIRECTION_LABELS[d]]; }),
+      settings.data.direction, function (v) { settings.set({ direction: v }); });
+    buildSeg('seg-count', QB.COUNTS.map(function (c) { return [String(c), String(c)]; }),
+      String(settings.data.count), function (v) { settings.set({ count: parseInt(v, 10) }); });
+    buildSeg('seg-source', QB.SOURCES.map(function (s) { return [s, QB.SOURCE_LABELS[s]]; }),
+      settings.data.source, function (v) { settings.set({ source: v }); });
+    buildChapters();
+    show('home');
+  }());
+}());
+</script>
+</body>
+</html>
